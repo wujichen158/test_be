@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "particle": "ancientskybaubles:item/round_1st_medal",
+    "layer0": "ancientskybaubles:item/round_1st_medal"
+  }
+}
