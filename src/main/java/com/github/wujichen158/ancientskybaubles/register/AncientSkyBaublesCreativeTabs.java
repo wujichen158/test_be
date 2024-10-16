@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 public class AncientSkyBaublesCreativeTabs {
     private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Reference.MOD_ID);
 
-    public static final RegistryObject<CreativeModeTab> ANCIENTSKY_PMS = register(
+    public static final RegistryObject<CreativeModeTab> ANCIENTSKY_BAUBLES = register(
             "ancientskybaubles", Component.translatable("itemGroup.ancientskybaubles"), () -> new ItemStack(AncientSkyBaublesItems.MedalItems.ROUND_1ST_MEDAL),
             (parameters, output) -> AncientSkyBaublesItems.ItemEntry.ALL_ITEMS.forEach(output::accept)
     );

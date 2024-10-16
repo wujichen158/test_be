@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "particle": "ancientskybaubles:block/shoal_salt",
+    "layer0": "ancientskybaubles:block/shoal_salt"
+  }
+}

@@ -3,5 +3,9 @@
 
   "itemGroup.ancientskybaubles": "Ancient Sky Baubles",
 
-  "item.ancientskybaubles.round_1st_medal": "Round 1st Medal"
+  "item.ancientskybaubles.round_1st_medal": "Round 1st Medal",
+  "block.ancientskybaubles.shoal_salt": "Shoal Salt",
+
+  "regenerable_res.msg.harvest": "You harvested resource %s",
+  "regenerable_res.msg.already_harvested": "You have already harvested resource %s today!"
 }

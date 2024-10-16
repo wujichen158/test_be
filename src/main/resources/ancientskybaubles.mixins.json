@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "com.github.wujichen158.ancientskybaubles.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "ancientskybaubles.refmap.json",
+  "mixins": [
+    "ChunkHolderMixin",
+    "ForgeHooksMixin"
+  ],
+  "minVersion": "0.8",
+  "client": []
+}

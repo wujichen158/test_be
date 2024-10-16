@@ -3,5 +3,9 @@
 
   "itemGroup.ancientskybaubles": "上古蓝天勋章",
 
-  "item.ancientskybaubles.round_1st_medal": "一周目勋章"
+  "item.ancientskybaubles.round_1st_medal": "一周目勋章",
+  "block.ancientskybaubles.shoal_salt": "浅滩海盐",
+
+  "regenerable_res.msg.harvest": "你开采了资源 %s",
+  "regenerable_res.msg.already_harvested": "你今天已经开采过资源 %s 了！"
 }
