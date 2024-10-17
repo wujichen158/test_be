@@ -1,11 +1,13 @@
 package com.github.wujichen158.ancientskybaubles.block.entity;
 
+import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.SyncHarvestDataPacket;
 import com.github.wujichen158.ancientskybaubles.util.DayDateUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
@@ -16,12 +18,14 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -79,6 +83,23 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         return new SyncHarvestDataPacket(hasHarvested(player), this.getBlockPos());
     }
 
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (this.getLevel() == null || this.getLevel().isClientSide()) {
+            return;
+        }
+        System.out.println("on load!!!");
+        this.getLevel().players().forEach(player -> {
+                    System.out.println("status: " + hasHarvested(player));
+                    AncientSkyBaublesNetwork.INSTANCE.send(new SyncHarvestDataPacket(hasHarvested(player), this.getBlockPos()),
+                            PacketDistributor.PLAYER.with((ServerPlayer) player));
+                }
+        );
+    }
+
+
+
     /**
      * 方块实体tick时执行的方法
      *
@@ -92,19 +113,15 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         if (level.isClientSide()) {
             return;
         }
-//        System.out.println("列表:");
-//        blockEntity.harvestedPlayers.forEach(System.out::println);
-
         LocalDateTime currentTime = LocalDateTime.now();
         LocalDate currentDate = currentTime.toLocalDate();
         //TODO: 改成使用配置
-        LocalDateTime regenerateTime = LocalDateTime.now().withMinute(30);
+        LocalDateTime regenerateTime = LocalDateTime.now().withMinute(10);
 
         // 判断是否同一天。仅日期严格大于regenerateTime才继续
         if (!blockEntity.regenerateDate.isEqual(currentDate) && currentDate.isAfter(blockEntity.regenerateDate)) {
-            System.out.println("111");
             if (currentTime.isAfter(regenerateTime) || currentTime.isEqual(regenerateTime)) {
-                blockEntity.regenerate(currentDate);
+                blockEntity.regenerate(currentDate, level.players());
                 System.out.println("已重置！");
             }
         }
@@ -125,12 +142,19 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     public void onHarvest(Player player) {
         harvestedPlayers.add(player.getUUID());
         setChanged();
+        System.out.println("harvested!!!");
+        AncientSkyBaublesNetwork.INSTANCE.send(new SyncHarvestDataPacket(true, this.getBlockPos()),
+                PacketDistributor.PLAYER.with((ServerPlayer) player));
     }
 
-    public void regenerate(LocalDate currentDate) {
+    public void regenerate(LocalDate currentDate, List<? extends Player> players) {
         this.harvestedPlayers.clear();
         this.regenerateDate = currentDate;
         setChanged();
+        System.out.println("regenerate!!!");
+        players.forEach(player ->
+                AncientSkyBaublesNetwork.INSTANCE.send(new SyncHarvestDataPacket(false, this.getBlockPos()),
+                        PacketDistributor.PLAYER.with((ServerPlayer) player)));
     }
 
     public boolean hasHarvested(Player player) {
