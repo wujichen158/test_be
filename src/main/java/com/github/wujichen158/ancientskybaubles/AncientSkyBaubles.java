@@ -2,6 +2,8 @@ package com.github.wujichen158.ancientskybaubles;
 
 import com.github.wujichen158.ancientskybaubles.listener.ClientRenderListener;
 import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
+import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusRequestPacket;
+import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusResponsePacket;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.SyncHarvestDataPacket;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesBlockEntities;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesBlocks;
@@ -46,10 +48,21 @@ public class AncientSkyBaubles {
 
     private void setupNetwork(final FMLCommonSetupEvent event) {
         int messageNumber = 0;
-        AncientSkyBaublesNetwork.INSTANCE.messageBuilder(SyncHarvestDataPacket.class, messageNumber++, NetworkDirection.PLAY_TO_CLIENT)
-                .encoder(SyncHarvestDataPacket::encode)
-                .decoder(SyncHarvestDataPacket::new)
-                .consumerNetworkThread(SyncHarvestDataPacket::handle)
+//        AncientSkyBaublesNetwork.INSTANCE.messageBuilder(SyncHarvestDataPacket.class, messageNumber++, NetworkDirection.PLAY_TO_CLIENT)
+//                .encoder(SyncHarvestDataPacket::encode)
+//                .decoder(SyncHarvestDataPacket::new)
+//                .consumerNetworkThread(SyncHarvestDataPacket::handle)
+//                .add();
+
+        AncientSkyBaublesNetwork.INSTANCE.messageBuilder(HarvestStatusRequestPacket.class, messageNumber++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(HarvestStatusRequestPacket::encode)
+                .decoder(HarvestStatusRequestPacket::new)
+                .consumerNetworkThread(HarvestStatusRequestPacket::handle)
+                .add();
+        AncientSkyBaublesNetwork.INSTANCE.messageBuilder(HarvestStatusResponsePacket.class, messageNumber++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(HarvestStatusResponsePacket::encode)
+                .decoder(HarvestStatusResponsePacket::new)
+                .consumerNetworkThread(HarvestStatusResponsePacket::handle)
                 .add();
     }
 }
