@@ -1,6 +1,7 @@
 package com.github.wujichen158.ancientskybaubles.client.renderer;
 
 import com.github.wujichen158.ancientskybaubles.block.entity.ShoalSaltBlockEntity;
+import com.github.wujichen158.ancientskybaubles.client.cache.ClientRegenerableBlockEntityCache;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesBlocks;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -24,15 +25,19 @@ public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<ShoalSa
 
     @Override
     public void render(ShoalSaltBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
-        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-        if (blockEntity.harvestStatus) {
+        if (ClientRegenerableBlockEntityCache.hasHarvestStatus(blockEntity)) {
+            BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
+            if (blockEntity.harvestStatus) {
 //            System.out.println("has harvested!");
-            // 渲染已开采的模型
+                // 渲染已开采的模型
 //            renderHarvestedModel(blockRenderDispatcher, poseStack, bufferSource, combinedLight, combinedOverlay);
-        } else {
+            } else {
 //            System.out.println("unharvested");
-            // 渲染未开采的模型
+                // 渲染未开采的模型
 //            renderUnharvestedModel(blockRenderDispatcher, poseStack, bufferSource, combinedLight, combinedOverlay);
+            }
+        } else {
+            // 发包给服务端查询
         }
     }
 
