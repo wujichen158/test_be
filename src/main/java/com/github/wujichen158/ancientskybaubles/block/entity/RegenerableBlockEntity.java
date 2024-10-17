@@ -89,6 +89,12 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
      */
     public static void tick(Level level, BlockPos blockPos, BlockState state, RegenerableBlockEntity blockEntity) {
 //        LocalDateTime currentTime = LocalDateTime.now(ZoneId.systemDefault());
+        if (level.isClientSide()) {
+            return;
+        }
+//        System.out.println("列表:");
+//        blockEntity.harvestedPlayers.forEach(System.out::println);
+
         LocalDateTime currentTime = LocalDateTime.now();
         LocalDate currentDate = currentTime.toLocalDate();
         //TODO: 改成使用配置
@@ -96,9 +102,9 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
 
         // 判断是否同一天。仅日期严格大于regenerateTime才继续
         if (!blockEntity.regenerateDate.isEqual(currentDate) && currentDate.isAfter(blockEntity.regenerateDate)) {
-            if (currentTime.isAfter(regenerateTime)) {
-                blockEntity.regenerate();
-                blockEntity.regenerateDate = currentDate;
+            System.out.println("111");
+            if (currentTime.isAfter(regenerateTime) || currentTime.isEqual(regenerateTime)) {
+                blockEntity.regenerate(currentDate);
                 System.out.println("已重置！");
             }
         }
@@ -121,8 +127,10 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         setChanged();
     }
 
-    public void regenerate() {
+    public void regenerate(LocalDate currentDate) {
         this.harvestedPlayers.clear();
+        this.regenerateDate = currentDate;
+        setChanged();
     }
 
     public boolean hasHarvested(Player player) {
