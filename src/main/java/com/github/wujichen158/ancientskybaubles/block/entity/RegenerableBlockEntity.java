@@ -32,7 +32,7 @@ import java.util.UUID;
 public abstract class RegenerableBlockEntity extends BlockEntity {
 
     // 客户端可见的BE状态，用于渲染
-    @OnlyIn(Dist.CLIENT)
+//    @OnlyIn(Dist.CLIENT)
     public boolean harvestStatus = false;
 
     private LocalDate regenerateDate;
@@ -59,6 +59,8 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         harvestedPlayers.forEach(uuid -> uuidList.add(NbtUtils.createUUID(uuid)));
         tag.put("harvested_players", uuidList);
 
+        System.out.println("save!");
+
         tag.putInt("regenerate_time", DayDateUtil.dateToDays(regenerateDate));
     }
 
@@ -74,6 +76,8 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         ListTag listTag = tag.getList("harvested_players", Tag.TAG_INT_ARRAY);
         harvestedPlayers.clear();
         listTag.forEach(uuidTag -> harvestedPlayers.add(NbtUtils.loadUUID(uuidTag)));
+
+        System.out.println("load!");
 
         regenerateDate = DayDateUtil.daysToDate(tag.getInt("regenerate_time"));
     }
