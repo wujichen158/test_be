@@ -67,7 +67,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     public void load(@NotNull CompoundTag tag) {
         super.load(tag);
 
-        ListTag listTag = tag.getList("harvested_players", 8);
+        ListTag listTag = tag.getList("harvested_players", Tag.TAG_INT_ARRAY);
         harvestedPlayers.clear();
         listTag.forEach(uuidTag -> harvestedPlayers.add(NbtUtils.loadUUID(uuidTag)));
 
