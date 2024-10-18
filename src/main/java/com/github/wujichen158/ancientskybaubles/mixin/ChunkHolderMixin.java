@@ -32,9 +32,10 @@ public abstract class ChunkHolderMixin {
     private void handler$broadcastRegenerableBECallback$injectBroadcastBlockEntity(List<ServerPlayer> players, Level level, BlockPos blockPos, CallbackInfo ci) {
         BlockEntity blockEntity = level.getBlockEntity(blockPos);
         if (blockEntity instanceof RegenerableBlockEntity regenerableBlockEntity) {
-            players.forEach(player -> Optional.ofNullable(regenerableBlockEntity.getUpdatePacket(player))
-                    .ifPresent(packet -> AncientSkyBaublesNetwork.INSTANCE.send(packet, PacketDistributor.PLAYER.with(player))));
-            ci.cancel();
+//            System.out.println("chunk mixin");
+//            players.forEach(player -> Optional.ofNullable(regenerableBlockEntity.getUpdatePacket(player))
+//                    .ifPresent(packet -> AncientSkyBaublesNetwork.INSTANCE.send(packet, PacketDistributor.PLAYER.with(player))));
+//            ci.cancel();
         }
     }
 }

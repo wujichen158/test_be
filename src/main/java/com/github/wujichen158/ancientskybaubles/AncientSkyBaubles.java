@@ -2,9 +2,8 @@ package com.github.wujichen158.ancientskybaubles;
 
 import com.github.wujichen158.ancientskybaubles.listener.ClientRenderListener;
 import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
-import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusRequestPacket;
-import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusResponsePacket;
-import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.SyncHarvestDataPacket;
+import com.github.wujichen158.ancientskybaubles.network.packet.Packet;
+import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.*;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesBlockEntities;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesBlocks;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesCreativeTabs;
@@ -64,5 +63,15 @@ public class AncientSkyBaubles {
                 .decoder(HarvestStatusResponsePacket::new)
                 .consumerNetworkThread(HarvestStatusResponsePacket::handle)
                 .add();
+        AncientSkyBaublesNetwork.INSTANCE.messageBuilder(RegeneratePacket.class, messageNumber++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(RegeneratePacket::encode)
+                .decoder(RegeneratePacket::new)
+                .consumerNetworkThread(RegeneratePacket::handle)
+                .add();
+//        AncientSkyBaublesNetwork.INSTANCE.messageBuilder(GenerableOnBreakPacket.class, messageNumber++, NetworkDirection.PLAY_TO_CLIENT)
+//                .encoder(GenerableOnBreakPacket::encode)
+//                .decoder(GenerableOnBreakPacket::new)
+//                .consumerNetworkThread(GenerableOnBreakPacket::handle)
+//                .add();
     }
 }

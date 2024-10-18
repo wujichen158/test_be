@@ -1,7 +1,10 @@
 package com.github.wujichen158.ancientskybaubles.block.entity;
 
+import com.github.wujichen158.ancientskybaubles.client.cache.RegenerableBlockEntityCache;
 import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
-import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.SyncHarvestDataPacket;
+import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.GenerableOnBreakPacket;
+import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusResponsePacket;
+import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.RegeneratePacket;
 import com.github.wujichen158.ancientskybaubles.util.DayDateUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -16,12 +19,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -33,7 +33,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
 
     // 客户端可见的BE状态，用于渲染
 //    @OnlyIn(Dist.CLIENT)
-    public boolean harvestStatus = false;
+//    public boolean harvestStatus = false;
 
     private LocalDate regenerateDate;
 
@@ -59,7 +59,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         harvestedPlayers.forEach(uuid -> uuidList.add(NbtUtils.createUUID(uuid)));
         tag.put("harvested_players", uuidList);
 
-        System.out.println("save!");
+//        System.out.println("save!");
 
         tag.putInt("regenerate_time", DayDateUtil.dateToDays(regenerateDate));
     }
@@ -77,32 +77,33 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         harvestedPlayers.clear();
         listTag.forEach(uuidTag -> harvestedPlayers.add(NbtUtils.loadUUID(uuidTag)));
 
-        System.out.println("load!");
+//        System.out.println("load!");
 
         regenerateDate = DayDateUtil.daysToDate(tag.getInt("regenerate_time"));
     }
 
-    @Nullable
-    public SyncHarvestDataPacket getUpdatePacket(ServerPlayer player) {
-        return new SyncHarvestDataPacket(hasHarvested(player), this.getBlockPos());
-    }
+//    @Nullable
+//    public SyncHarvestDataPacket getUpdatePacket(ServerPlayer player) {
+//        return new SyncHarvestDataPacket(hasHarvested(player), this.getBlockPos());
+//    }
 
     @Override
-    public void onLoad() {
-        super.onLoad();
-        if (this.getLevel() == null || this.getLevel().isClientSide()) {
-            return;
+    public void setRemoved() {
+        super.setRemoved();
+        // 方案1：直接客户端层面删除
+        if (getLevel().isClientSide()) {
+            RegenerableBlockEntityCache.onBreak(this);
         }
-        System.out.println("on load!!!");
-        this.getLevel().players().forEach(player -> {
-                    System.out.println("status: " + hasHarvested(player));
-                    AncientSkyBaublesNetwork.INSTANCE.send(new SyncHarvestDataPacket(hasHarvested(player), this.getBlockPos()),
-                            PacketDistributor.PLAYER.with((ServerPlayer) player));
-                }
-        );
+        // 方案2（备选）：每次删除时广播删除包
+//        if (getLevel().isClientSide()) {
+//            return;
+//        }
+//        getLevel().players().forEach(player -> {
+//            AncientSkyBaublesNetwork.INSTANCE.send(new GenerableOnBreakPacket(
+//                            RegenerableBlockEntityCache.constructGlobalPos(this)),
+//                    PacketDistributor.PLAYER.with((ServerPlayer) player));
+//        });
     }
-
-
 
     /**
      * 方块实体tick时执行的方法
@@ -134,11 +135,10 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
 
     public InteractionResult use(Player player) {
         if (harvestedPlayers.contains(player.getUUID())) {
-            player.sendSystemMessage(Component.translatable("regenerable_res.msg.already_harvested", ""));
+            player.sendSystemMessage(Component.translatable("regenerable_res.msg.already_harvested", getBlockState().getBlock().getName().getString()));
         } else {
             onHarvest(player);
-            // TODO: 填写资源名
-            player.sendSystemMessage(Component.translatable("regenerable_res.msg.harvest", ""));
+            player.sendSystemMessage(Component.translatable("regenerable_res.msg.harvest", getBlockState().getBlock().getName().getString()));
         }
         return InteractionResult.SUCCESS;
     }
@@ -146,8 +146,9 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     public void onHarvest(Player player) {
         harvestedPlayers.add(player.getUUID());
         setChanged();
-        System.out.println("harvested!!!");
-        AncientSkyBaublesNetwork.INSTANCE.send(new SyncHarvestDataPacket(true, this.getBlockPos()),
+//        System.out.println("harvested!!!");
+        AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusResponsePacket(
+                        true, RegenerableBlockEntityCache.constructGlobalPos(this)),
                 PacketDistributor.PLAYER.with((ServerPlayer) player));
     }
 
@@ -155,9 +156,10 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         this.harvestedPlayers.clear();
         this.regenerateDate = currentDate;
         setChanged();
-        System.out.println("regenerate!!!");
+//        System.out.println("regenerate!!!");
         players.forEach(player ->
-                AncientSkyBaublesNetwork.INSTANCE.send(new SyncHarvestDataPacket(false, this.getBlockPos()),
+                AncientSkyBaublesNetwork.INSTANCE.send(new RegeneratePacket(
+                                false, RegenerableBlockEntityCache.constructGlobalPos(this)),
                         PacketDistributor.PLAYER.with((ServerPlayer) player)));
     }
 

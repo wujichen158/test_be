@@ -8,9 +8,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@OnlyIn(Dist.CLIENT)
-public class ClientRegenerableBlockEntityCache {
+public class RegenerableBlockEntityCache {
 
+    @OnlyIn(Dist.CLIENT)
     private static final LRUMap<GlobalPos, Boolean> REGENERABLE_BE_CACHE = new LRUMap<>(100);
 
     /**
@@ -23,35 +23,38 @@ public class ClientRegenerableBlockEntityCache {
         return REGENERABLE_BE_CACHE.containsKey(constructGlobalPos(blockEntity));
     }
 
-    public static void queryHarvestStatus() {
-
+    /**
+     * 不额外创建 Optional 对象以提高效率
+     *
+     * @param blockEntity
+     * @return
+     */
+    public static boolean queryHarvestStatus(BlockEntity blockEntity) {
+        Boolean res = REGENERABLE_BE_CACHE.get(constructGlobalPos(blockEntity));
+        return res != null ? res : false;
     }
 
     public static void addHarvestStatus(GlobalPos regenerableGlobalPos, boolean harvestStatus) {
         REGENERABLE_BE_CACHE.put(regenerableGlobalPos, harvestStatus);
     }
 
-    public static void harvest() {
-
-    }
-
-    public static void regenerate(BlockEntity blockEntity) {
+    public static void regenerate(GlobalPos regenerableGlobalPos, boolean harvestStatus) {
+        REGENERABLE_BE_CACHE.computeIfPresent(regenerableGlobalPos, (key, oldValue) -> harvestStatus);
     }
 
     public static void onBreak(BlockEntity blockEntity) {
-        GlobalPos globalPos = constructGlobalPos(blockEntity);
+        onBreak(constructGlobalPos(blockEntity));
+    }
+
+    public static void onBreak(GlobalPos globalPos) {
         REGENERABLE_BE_CACHE.remove(globalPos);
     }
 
-    public void addHarvestedStatus(GlobalPos globalPos) {
-        if (REGENERABLE_BE_CACHE.containsKey(globalPos)) {
-
-        } else {
-            // TODO: 发包
-        }
+    public static void clear() {
+        REGENERABLE_BE_CACHE.clear();
     }
 
-    private static GlobalPos constructGlobalPos(BlockEntity blockEntity) {
+    public static GlobalPos constructGlobalPos(BlockEntity blockEntity) {
         return GlobalPos.of(blockEntity.getLevel().dimension(), blockEntity.getBlockPos());
     }
 

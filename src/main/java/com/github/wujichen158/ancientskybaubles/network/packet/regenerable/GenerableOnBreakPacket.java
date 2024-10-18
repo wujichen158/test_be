@@ -6,34 +6,30 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 
-public class HarvestStatusResponsePacket extends Packet {
-    protected boolean harvestedStatus;
+public class GenerableOnBreakPacket extends Packet {
     protected GlobalPos regenerableGlobalPos;
 
-    public HarvestStatusResponsePacket(boolean harvestedStatus, GlobalPos regenerableGlobalPos) {
-        this.harvestedStatus = harvestedStatus;
+    public GenerableOnBreakPacket(GlobalPos regenerableGlobalPos) {
         this.regenerableGlobalPos = regenerableGlobalPos;
     }
 
-    public HarvestStatusResponsePacket(FriendlyByteBuf buffer) {
+    public GenerableOnBreakPacket(FriendlyByteBuf buffer) {
         super(buffer);
     }
 
     @Override
     public void decode(FriendlyByteBuf packetBuffer) {
-        this.harvestedStatus = packetBuffer.readBoolean();
         this.regenerableGlobalPos = packetBuffer.readGlobalPos();
     }
 
     @Override
     public void encode(FriendlyByteBuf packetBuffer) {
-        packetBuffer.writeBoolean(this.harvestedStatus);
         packetBuffer.writeGlobalPos(this.regenerableGlobalPos);
     }
 
     @Override
     public void handle(CustomPayloadEvent.Context ctx) {
-        ctx.enqueueWork(() -> RegenerableBlockEntityCache.addHarvestStatus(this.regenerableGlobalPos, this.harvestedStatus));
+        ctx.enqueueWork(() -> RegenerableBlockEntityCache.onBreak(this.regenerableGlobalPos));
         ctx.setPacketHandled(true);
     }
 }

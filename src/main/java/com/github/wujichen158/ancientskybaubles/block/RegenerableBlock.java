@@ -45,7 +45,7 @@ public abstract class RegenerableBlock extends BaseEntityBlock {
     @NotNull
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+        return RenderShape.INVISIBLE;
     }
 
 //    @Override

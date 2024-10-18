@@ -31,8 +31,9 @@ public abstract class ForgeHooksMixin {
     private static void handler$onBreakRegenerableBECallback$injectBreakBlockEntity(ServerPlayer player, Level level, BlockPos blockPos) {
         BlockEntity blockEntity = level.getBlockEntity(blockPos);
         if (blockEntity instanceof RegenerableBlockEntity regenerableBlockEntity) {
-            Optional.ofNullable(regenerableBlockEntity.getUpdatePacket(player))
-                    .ifPresent(packet -> AncientSkyBaublesNetwork.INSTANCE.send(packet, PacketDistributor.PLAYER.with(player)));
+//            System.out.println("forge mixin");
+//            Optional.ofNullable(regenerableBlockEntity.getUpdatePacket(player))
+//                    .ifPresent(packet -> AncientSkyBaublesNetwork.INSTANCE.send(packet, PacketDistributor.PLAYER.with(player)));
         }
     }
 }

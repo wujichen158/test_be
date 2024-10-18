@@ -1,14 +1,18 @@
 package com.github.wujichen158.ancientskybaubles.client.renderer;
 
 import com.github.wujichen158.ancientskybaubles.block.entity.ShoalSaltBlockEntity;
-import com.github.wujichen158.ancientskybaubles.client.cache.ClientRegenerableBlockEntityCache;
+import com.github.wujichen158.ancientskybaubles.client.cache.RegenerableBlockEntityCache;
+import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
+import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusRequestPacket;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesBlocks;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.data.ModelData;
 
@@ -25,30 +29,42 @@ public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<ShoalSa
 
     @Override
     public void render(ShoalSaltBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
-        if (ClientRegenerableBlockEntityCache.hasHarvestStatus(blockEntity)) {
-            BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-            if (blockEntity.harvestStatus) {
-//            System.out.println("has harvested!");
+        if (RegenerableBlockEntityCache.hasHarvestStatus(blockEntity)) {
+            if (RegenerableBlockEntityCache.queryHarvestStatus(blockEntity)) {
                 // 渲染已开采的模型
-//            renderHarvestedModel(blockRenderDispatcher, poseStack, bufferSource, combinedLight, combinedOverlay);
+                renderModel("shoal_salt_mined", poseStack, bufferSource, combinedLight, combinedOverlay);
             } else {
-//            System.out.println("unharvested");
                 // 渲染未开采的模型
-//            renderUnharvestedModel(blockRenderDispatcher, poseStack, bufferSource, combinedLight, combinedOverlay);
+                renderModel("shoal_salt", poseStack, bufferSource, combinedLight, combinedOverlay);
             }
         } else {
             // 发包给服务端查询
+            AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusRequestPacket(
+                            Minecraft.getInstance().player.getUUID(),
+                            RegenerableBlockEntityCache.constructGlobalPos(blockEntity)),
+                    Minecraft.getInstance().getConnection().getConnection());
         }
     }
 
-    private void renderHarvestedModel(BlockRenderDispatcher blockRenderDispatcher, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
-        blockRenderDispatcher.renderSingleBlock(HARVESTED_STATE, poseStack, bufferSource, combinedLight, combinedOverlay,
-                ModelData.EMPTY, null);
-    }
+    // 辅助方法用于渲染不同的模型
+    private void renderModel(String modelName, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
+        // 使用 ResourceLocation 加载模型
+        ResourceLocation modelLocation = new ResourceLocation("ancientskybaubles", "block/" + modelName);
+        BakedModel model = Minecraft.getInstance().getModelManager().getModel(modelLocation);
 
-    private void renderUnharvestedModel(BlockRenderDispatcher blockRenderDispatcher, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
-        // TODO: 更改渲染方法
-        blockRenderDispatcher.renderSingleBlock(HARVESTED_STATE, poseStack, bufferSource, combinedLight, combinedOverlay,
-                ModelData.EMPTY, null);
+        if (model == Minecraft.getInstance().getModelManager().getMissingModel()) {
+            System.out.println("模型未找到，使用了缺失模型");
+        }
+
+//        renderModel(p_110914_.last(),
+//                p_110915_.getBuffer(renderType != null ? renderType : RenderTypeHelper.getEntityRenderType(rt, false)),
+//                p_110913_, bakedmodel, f, f1, f2, p_110916_, p_110917_, modelData, rt);
+
+        // 渲染模型
+        RenderType renderType = RenderType.translucent();
+        Minecraft.getInstance().getBlockRenderer().getModelRenderer().renderModel(poseStack.last(),
+                bufferSource.getBuffer(renderType),
+                null, model, 1.0F, 1.0F, 1.0F, combinedLight, combinedOverlay,
+                ModelData.EMPTY, renderType);
     }
 }

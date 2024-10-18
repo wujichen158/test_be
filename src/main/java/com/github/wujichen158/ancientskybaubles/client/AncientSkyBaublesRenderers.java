@@ -13,7 +13,8 @@ public class AncientSkyBaublesRenderers {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-//        event.registerBlockEntityRenderer(AncientSkyBaublesBlockEntities.SHOAL_SALT_BLOCK_ENTITY.get(),
-//                ShoalSaltBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(AncientSkyBaublesBlockEntities.SHOAL_SALT_BLOCK_ENTITY.get(),
+                ShoalSaltBlockEntityRenderer::new);
     }
+
 }
