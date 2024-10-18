@@ -37,6 +37,10 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
 
     private LocalDate regenerateDate;
 
+    @Override
+    public boolean hasCustomOutlineRendering(Player player) {
+        return super.hasCustomOutlineRendering(player);
+    }
 
     // 记录方块是否已被开采
     protected final Set<UUID> harvestedPlayers = new HashSet<>();
