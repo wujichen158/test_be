@@ -14,13 +14,9 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.client.RenderTypeHelper;
 import net.minecraftforge.client.model.data.ModelData;
 
 public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<ShoalSaltBlockEntity> {
@@ -53,18 +49,12 @@ public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<ShoalSa
 
     private void renderModel(BlockState blockState, BlockRenderDispatcher blockRenderDispatcher, PoseStack poseStack,
                              MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
-//        blockRenderDispatcher.renderSingleBlock(blockState, poseStack, bufferSource, combinedLight, combinedOverlay,
-//                ModelData.EMPTY, RenderType.translucent());
-        BakedModel bakedmodel = blockRenderDispatcher.getBlockModel(blockState);
-        RenderType renderType = RenderType.translucent();
-        int i = Minecraft.getInstance().getBlockColors().getColor(blockState, null, null, 0);
-        float f = (float)(i >> 16 & 255) / 255.0F;
-        float f1 = (float)(i >> 8 & 255) / 255.0F;
-        float f2 = (float)(i & 255) / 255.0F;
-        for (RenderType rt : bakedmodel.getRenderTypes(blockState, RandomSource.create(42), ModelData.EMPTY)) {
+        BakedModel bakedModel = blockRenderDispatcher.getBlockModel(blockState);
+        for (RenderType blockRenderType : bakedModel.getRenderTypes(blockState, RandomSource.create(42), ModelData.EMPTY)) {
+            RenderType entityRenderType = RenderTypeHelper.getEntityRenderType(blockRenderType, true);
             blockRenderDispatcher.getModelRenderer().renderModel(poseStack.last(),
-                    bufferSource.getBuffer(renderType), blockState, bakedmodel,
-                    1, 1, 1, combinedLight, combinedOverlay, ModelData.EMPTY, rt);
+                    bufferSource.getBuffer(entityRenderType), blockState, bakedModel,
+                    1, 1, 1, combinedLight, combinedOverlay, ModelData.EMPTY, blockRenderType);
         }
 
     }
