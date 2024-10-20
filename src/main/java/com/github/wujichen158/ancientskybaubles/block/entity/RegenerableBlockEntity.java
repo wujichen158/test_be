@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public abstract class RegenerableBlockEntity extends BlockEntity {
+public class RegenerableBlockEntity extends BlockEntity {
 
     // 客户端可见的BE状态，用于渲染
 //    @OnlyIn(Dist.CLIENT)
