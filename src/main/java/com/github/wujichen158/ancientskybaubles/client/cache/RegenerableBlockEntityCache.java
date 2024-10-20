@@ -29,12 +29,11 @@ public class RegenerableBlockEntityCache {
      * @param blockEntity
      * @return
      */
-    public static boolean queryHarvestStatus(BlockEntity blockEntity) {
-        Boolean res = REGENERABLE_BE_CACHE.get(constructGlobalPos(blockEntity));
-        return res != null ? res : false;
+    public static Boolean queryHarvestStatus(BlockEntity blockEntity) {
+        return REGENERABLE_BE_CACHE.get(constructGlobalPos(blockEntity));
     }
 
-    public static void addHarvestStatus(GlobalPos regenerableGlobalPos, boolean harvestStatus) {
+    public static void addHarvestStatus(GlobalPos regenerableGlobalPos, Boolean harvestStatus) {
         REGENERABLE_BE_CACHE.put(regenerableGlobalPos, harvestStatus);
     }
 

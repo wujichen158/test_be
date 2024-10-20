@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.RenderTypeHelper;
@@ -35,15 +36,20 @@ public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<ShoalSa
     public void render(ShoalSaltBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
         if (RegenerableBlockEntityCache.hasHarvestStatus(blockEntity)) {
             // 命中
-            BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-            BlockState blockState = RegenerableBlockEntityCache.queryHarvestStatus(blockEntity) ? HARVESTED_STATE : UNHARVESTED_STATE;
-            renderModel(blockState, blockRenderDispatcher, poseStack, bufferSource, combinedLight, combinedOverlay);
+            Boolean res = RegenerableBlockEntityCache.queryHarvestStatus(blockEntity);
+            if (res != null) {
+                BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
+                BlockState blockState = res ? HARVESTED_STATE : UNHARVESTED_STATE;
+                renderModel(blockState, blockRenderDispatcher, poseStack, bufferSource, combinedLight, combinedOverlay);
+            }
         } else {
             // 未命中，发包给服务端查询
+            GlobalPos globalPos = RegenerableBlockEntityCache.constructGlobalPos(blockEntity);
             AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusRequestPacket(
-                            Minecraft.getInstance().player.getUUID(),
-                            RegenerableBlockEntityCache.constructGlobalPos(blockEntity)),
+                            Minecraft.getInstance().player.getUUID(), globalPos),
                     Minecraft.getInstance().getConnection().getConnection());
+            // 仅发一次即可
+            RegenerableBlockEntityCache.addHarvestStatus(globalPos, null);
         }
     }
 
