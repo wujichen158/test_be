@@ -17,10 +17,13 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.RenderTypeHelper;
 import net.minecraftforge.client.model.data.ModelData;
 
-public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<RegenerableBlockEntity> {
+@OnlyIn(Dist.CLIENT)
+public class RegenerableBlockEntityRenderer implements BlockEntityRenderer<RegenerableBlockEntity> {
 
     // TODO: 寻找其他无需定义BlockState的方式
     // 定义两种状态常量：未开采和已开采
@@ -29,7 +32,7 @@ public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<Regener
     private static final BlockState HARVESTED_STATE = AncientSkyBaublesBlocks.RegenerableBlocks.SHOAL_SALT_BLOCK
             .get().defaultBlockState().setValue(RegenerableBlock.HARVESTED, true);
 
-    public ShoalSaltBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
+    public RegenerableBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
     }
 
     @Override
@@ -38,9 +41,7 @@ public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<Regener
             // 命中
             Boolean res = RegenerableBlockEntityCache.queryHarvestStatus(blockEntity);
             if (res != null) {
-                BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-                BlockState blockState = res ? HARVESTED_STATE : UNHARVESTED_STATE;
-                renderModel(blockState, blockRenderDispatcher, poseStack, bufferSource, combinedLight, combinedOverlay);
+                renderModel((res ? HARVESTED_STATE : UNHARVESTED_STATE), poseStack, bufferSource, combinedLight, combinedOverlay);
             }
         } else {
             // 未命中，发包给服务端查询
@@ -53,8 +54,9 @@ public class ShoalSaltBlockEntityRenderer implements BlockEntityRenderer<Regener
         }
     }
 
-    private void renderModel(BlockState blockState, BlockRenderDispatcher blockRenderDispatcher, PoseStack poseStack,
-                             MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
+    private void renderModel(BlockState blockState, PoseStack poseStack, MultiBufferSource bufferSource,
+                             int combinedLight, int combinedOverlay) {
+        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
         BakedModel bakedModel = blockRenderDispatcher.getBlockModel(blockState);
         for (RenderType blockRenderType : bakedModel.getRenderTypes(blockState, RandomSource.create(42), ModelData.EMPTY)) {
             RenderType entityRenderType = RenderTypeHelper.getEntityRenderType(blockRenderType, true);

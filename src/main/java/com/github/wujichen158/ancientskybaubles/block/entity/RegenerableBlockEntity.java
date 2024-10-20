@@ -2,7 +2,6 @@ package com.github.wujichen158.ancientskybaubles.block.entity;
 
 import com.github.wujichen158.ancientskybaubles.client.cache.RegenerableBlockEntityCache;
 import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
-import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.GenerableOnBreakPacket;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusResponsePacket;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.RegeneratePacket;
 import com.github.wujichen158.ancientskybaubles.util.DayDateUtil;
@@ -29,18 +28,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class RegenerableBlockEntity extends BlockEntity {
+public abstract class RegenerableBlockEntity extends BlockEntity {
 
     // 客户端可见的BE状态，用于渲染
 //    @OnlyIn(Dist.CLIENT)
 //    public boolean harvestStatus = false;
 
     private LocalDate regenerateDate;
-
-    @Override
-    public boolean hasCustomOutlineRendering(Player player) {
-        return super.hasCustomOutlineRendering(player);
-    }
 
     // 记录方块是否已被开采
     protected final Set<UUID> harvestedPlayers = new HashSet<>();

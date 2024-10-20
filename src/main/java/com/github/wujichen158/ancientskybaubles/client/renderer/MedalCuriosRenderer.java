@@ -1,4 +1,4 @@
-package com.github.wujichen158.ancientskybaubles.renderer;
+package com.github.wujichen158.ancientskybaubles.client.renderer;
 
 import com.github.wujichen158.ancientskybaubles.item.MedalCuriosItem;
 import com.github.wujichen158.ancientskybaubles.util.Reference;
