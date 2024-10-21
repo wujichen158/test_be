@@ -45,12 +45,16 @@ public class RegenerableBlockEntityRenderer implements BlockEntityRenderer<Regen
                 renderModel((res ? HARVESTED_STATE : UNHARVESTED_STATE), poseStack, bufferSource, combinedLight, combinedOverlay);
             }
         } else {
+            if (blockEntity.isRemoved()) {
+                return;
+            }
+
             // 未命中，发包给服务端查询
             GlobalPos globalPos = GlobalPosUtil.constructGlobalPos(blockEntity);
             AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusRequestPacket(
                             Minecraft.getInstance().player.getUUID(), globalPos),
                     Minecraft.getInstance().getConnection().getConnection());
-            // 仅发一次即可
+            // 仅发一次即可。此处控制仅发一次
             RegenerableBlockEntityCache.addHarvestStatus(globalPos, null);
         }
     }
