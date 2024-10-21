@@ -5,6 +5,7 @@ import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusResponsePacket;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.RegeneratePacket;
 import com.github.wujichen158.ancientskybaubles.util.DayDateUtil;
+import com.github.wujichen158.ancientskybaubles.util.GlobalPosUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -146,7 +147,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         setChanged();
 //        System.out.println("harvested!!!");
         AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusResponsePacket(
-                        true, RegenerableBlockEntityCache.constructGlobalPos(this)),
+                        true, GlobalPosUtil.constructGlobalPos(this)),
                 PacketDistributor.PLAYER.with((ServerPlayer) player));
     }
 
@@ -157,7 +158,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
 //        System.out.println("regenerate!!!");
         players.forEach(player ->
                 AncientSkyBaublesNetwork.INSTANCE.send(new RegeneratePacket(
-                                false, RegenerableBlockEntityCache.constructGlobalPos(this)),
+                                false, GlobalPosUtil.constructGlobalPos(this)),
                         PacketDistributor.PLAYER.with((ServerPlayer) player)));
     }
 

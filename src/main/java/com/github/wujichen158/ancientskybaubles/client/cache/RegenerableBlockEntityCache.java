@@ -1,5 +1,6 @@
 package com.github.wujichen158.ancientskybaubles.client.cache;
 
+import com.github.wujichen158.ancientskybaubles.util.GlobalPosUtil;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -20,7 +21,7 @@ public class RegenerableBlockEntityCache {
      * @return 其当前是否位于缓存中
      */
     public static boolean hasHarvestStatus(BlockEntity blockEntity) {
-        return REGENERABLE_BE_CACHE.containsKey(constructGlobalPos(blockEntity));
+        return REGENERABLE_BE_CACHE.containsKey(GlobalPosUtil.constructGlobalPos(blockEntity));
     }
 
     /**
@@ -30,7 +31,7 @@ public class RegenerableBlockEntityCache {
      * @return
      */
     public static Boolean queryHarvestStatus(BlockEntity blockEntity) {
-        return REGENERABLE_BE_CACHE.get(constructGlobalPos(blockEntity));
+        return REGENERABLE_BE_CACHE.get(GlobalPosUtil.constructGlobalPos(blockEntity));
     }
 
     public static void addHarvestStatus(GlobalPos regenerableGlobalPos, Boolean harvestStatus) {
@@ -42,7 +43,7 @@ public class RegenerableBlockEntityCache {
     }
 
     public static void onBreak(BlockEntity blockEntity) {
-        onBreak(constructGlobalPos(blockEntity));
+        onBreak(GlobalPosUtil.constructGlobalPos(blockEntity));
     }
 
     public static void onBreak(GlobalPos globalPos) {
@@ -51,10 +52,6 @@ public class RegenerableBlockEntityCache {
 
     public static void clear() {
         REGENERABLE_BE_CACHE.clear();
-    }
-
-    public static GlobalPos constructGlobalPos(BlockEntity blockEntity) {
-        return GlobalPos.of(blockEntity.getLevel().dimension(), blockEntity.getBlockPos());
     }
 
     private static class LRUMap<K, V> extends LinkedHashMap<K, V> {
