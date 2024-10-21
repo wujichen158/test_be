@@ -6,43 +6,49 @@ import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.Harve
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.RegeneratePacket;
 import com.github.wujichen158.ancientskybaubles.util.DayDateUtil;
 import com.github.wujichen158.ancientskybaubles.util.GlobalPosUtil;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class RegenerableBlockEntity extends BlockEntity {
 
     // 客户端可见的BE状态，用于渲染
-//    @OnlyIn(Dist.CLIENT)
-//    public boolean harvestStatus = false;
+    @OnlyIn(Dist.CLIENT)
+    public Boolean harvestStatus;
 
     private LocalDate regenerateDate;
 
-    // 记录方块是否已被开采
+    /**
+     * 记录方块是否已被开采
+     */
     protected final Set<UUID> harvestedPlayers = new HashSet<>();
+
+    protected List<Pair<ItemStack, Integer>> weightedOutputs = new ArrayList<>();
+    protected List<Float> harvestProbs = Arrays.asList(100f, 60f, 30f);
+    protected transient int totalWeight;
 
     public RegenerableBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         regenerateDate = LocalDate.now();
+        totalWeight = this.weightedOutputs.stream().mapToInt(Pair::getSecond).sum();
     }
 
     /**
@@ -55,12 +61,23 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         super.saveAdditional(tag);
 
         ListTag uuidList = new ListTag();
-        harvestedPlayers.forEach(uuid -> uuidList.add(NbtUtils.createUUID(uuid)));
+        this.harvestedPlayers.forEach(uuid -> uuidList.add(NbtUtils.createUUID(uuid)));
         tag.put("harvested_players", uuidList);
 
-//        System.out.println("save!");
+        ListTag outputsList = new ListTag();
+        this.weightedOutputs.forEach(pair -> {
+            CompoundTag outputTag = new CompoundTag();
+            pair.getFirst().save(outputTag);
+            outputTag.putInt("weight", pair.getSecond());
+            outputsList.add(outputTag);
+        });
+        tag.put("weighted_outputs", outputsList);
 
-        tag.putInt("regenerate_time", DayDateUtil.dateToDays(regenerateDate));
+        ListTag probList = new ListTag();
+        this.harvestProbs.forEach(prob -> probList.add(FloatTag.valueOf(prob)));
+        tag.put("harvest_probs", probList);
+
+        tag.putInt("regenerate_time", DayDateUtil.dateToDays(this.regenerateDate));
     }
 
     /**
@@ -72,13 +89,30 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     public void load(@NotNull CompoundTag tag) {
         super.load(tag);
 
-        ListTag listTag = tag.getList("harvested_players", Tag.TAG_INT_ARRAY);
-        harvestedPlayers.clear();
-        listTag.forEach(uuidTag -> harvestedPlayers.add(NbtUtils.loadUUID(uuidTag)));
+        ListTag uuidListTag = tag.getList("harvested_players", Tag.TAG_INT_ARRAY);
+        this.harvestedPlayers.clear();
+        uuidListTag.forEach(uuidTag -> this.harvestedPlayers.add(NbtUtils.loadUUID(uuidTag)));
 
-//        System.out.println("load!");
+        this.weightedOutputs.clear();
+        this.totalWeight = 0;
+        ListTag outputsListTag = tag.getList("weighted_outputs", Tag.TAG_INT_ARRAY);
+        outputsListTag.forEach(outputTag -> {
+            if (outputTag instanceof CompoundTag outputTagCompound) {
+                int weight = outputTagCompound.getInt("weight");
+                this.weightedOutputs.add(Pair.of(ItemStack.of(outputTagCompound), weight));
+                this.totalWeight += weight;
+            }
+        });
 
-        regenerateDate = DayDateUtil.daysToDate(tag.getInt("regenerate_time"));
+        this.harvestProbs.clear();
+        ListTag probListTag = tag.getList("harvest_probs", Tag.TAG_INT_ARRAY);
+        probListTag.forEach(prob -> {
+            if (prob instanceof FloatTag floatProb) {
+                this.harvestProbs.add(floatProb.getAsFloat());
+            }
+        });
+
+        this.regenerateDate = DayDateUtil.daysToDate(tag.getInt("regenerate_time"));
     }
 
 //    @Nullable
@@ -145,10 +179,33 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     public void onHarvest(Player player) {
         harvestedPlayers.add(player.getUUID());
         setChanged();
+
+        this.harvestProbs.forEach(prob -> {
+            if (Math.random() * 100 < prob) {
+                // 比较以下两种方法：
+//                player.addItem(itemStack);
+                Optional.ofNullable(calOutput())
+                        .filter(itemStack -> itemStack != ItemStack.EMPTY)
+                        .ifPresent(itemStack -> ItemHandlerHelper.giveItemToPlayer(player, itemStack));
+            }
+        });
+
 //        System.out.println("harvested!!!");
         AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusResponsePacket(
                         true, GlobalPosUtil.constructGlobalPos(this)),
                 PacketDistributor.PLAYER.with((ServerPlayer) player));
+    }
+
+    private ItemStack calOutput() {
+        int randomWeight = (new Random()).nextInt(this.totalWeight);
+        int currentWeight = 0;
+        for (Pair<ItemStack, Integer> weightedOutput : this.weightedOutputs) {
+            currentWeight += weightedOutput.getSecond();
+            if (randomWeight < currentWeight) {
+                return weightedOutput.getFirst();
+            }
+        }
+        return null;
     }
 
     public void regenerate(LocalDate currentDate, List<? extends Player> players) {
