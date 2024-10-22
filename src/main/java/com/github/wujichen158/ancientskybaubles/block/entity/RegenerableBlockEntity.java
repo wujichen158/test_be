@@ -25,7 +25,7 @@ import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 public abstract class RegenerableBlockEntity extends BlockEntity {
@@ -34,7 +34,10 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     @OnlyIn(Dist.CLIENT)
     public Boolean harvestStatus;
 
-    private LocalDate regenerateDate;
+    private LocalDate regenDate;
+
+    private byte regenHour = 4;
+    private byte regenMinute = 0;
 
     /**
      * 记录方块是否已被开采
@@ -42,12 +45,14 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     protected final Set<UUID> harvestedPlayers = new HashSet<>();
 
     protected List<Pair<ItemStack, Integer>> weightedOutputs = new ArrayList<>();
-    protected List<Float> harvestProbs = Arrays.asList(100f, 60f, 30f);
+    protected List<Float> harvestProbs = new ArrayList<>(Arrays.asList(100f, 60f, 30f));
     protected transient int totalWeight;
+    protected boolean allIn = false;
 
     public RegenerableBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        regenerateDate = LocalDate.now();
+        // 需要将再生日期提前一天，否则若放置时间还未到再生时间的话，今日就无法再生了
+        regenDate = LocalDate.now().minusDays(1);
         totalWeight = this.weightedOutputs.stream().mapToInt(Pair::getSecond).sum();
     }
 
@@ -77,7 +82,11 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         this.harvestProbs.forEach(prob -> probList.add(FloatTag.valueOf(prob)));
         tag.put("harvest_probs", probList);
 
-        tag.putInt("regenerate_time", DayDateUtil.dateToDays(this.regenerateDate));
+        tag.putBoolean("all_in", this.allIn);
+
+        tag.putInt("regenerate_date", DayDateUtil.dateToDays(this.regenDate));
+        tag.putByte("regenerate_hour", this.regenHour);
+        tag.putByte("regenerate_minute", this.regenMinute);
     }
 
     /**
@@ -112,7 +121,11 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
             }
         });
 
-        this.regenerateDate = DayDateUtil.daysToDate(tag.getInt("regenerate_time"));
+        this.allIn = tag.getBoolean("all_in");
+
+        this.regenDate = DayDateUtil.daysToDate(tag.getInt("regenerate_date"));
+        this.regenHour = tag.getByte("regenerate_hour");
+        this.regenMinute = tag.getByte("regenerate_minute");
     }
 
 //    @Nullable
@@ -151,19 +164,19 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         if (level.isClientSide()) {
             return;
         }
-        LocalDateTime currentTime = LocalDateTime.now();
-        LocalDate currentDate = currentTime.toLocalDate();
-        //TODO: 改成使用配置
-        LocalDateTime regenerateTime = LocalDateTime.now().withMinute(10);
 
-        // 判断是否同一天。仅日期严格大于regenerateTime才继续
-        if (!blockEntity.regenerateDate.isEqual(currentDate) && currentDate.isAfter(blockEntity.regenerateDate)) {
-            if (currentTime.isAfter(regenerateTime) || currentTime.isEqual(regenerateTime)) {
+        LocalTime currentTime = LocalTime.now();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime regenerateTime = LocalTime.of(blockEntity.regenHour, blockEntity.regenMinute);
+
+        // 判断当前日期是否在再生日期之后
+        if (currentDate.isAfter(blockEntity.regenDate)) {
+            // 如果当前时间在再生时间之后或相等，则触发再生
+            if (!currentTime.isBefore(regenerateTime)) {
                 blockEntity.regenerate(currentDate, level.players());
                 System.out.println("已重置！");
             }
         }
-
     }
 
     public InteractionResult use(Player player) {
@@ -180,22 +193,35 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         harvestedPlayers.add(player.getUUID());
         setChanged();
 
-        this.harvestProbs.forEach(prob -> {
-            if (Math.random() * 100 < prob) {
-                // 比较以下两种方法：
-//                player.addItem(itemStack);
-                Optional.ofNullable(calOutput())
-                        .filter(itemStack -> itemStack != ItemStack.EMPTY)
-                        .ifPresent(itemStack -> ItemHandlerHelper.giveItemToPlayer(player, itemStack));
-            }
-        });
-
 //        System.out.println("harvested!!!");
         AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusResponsePacket(
                         true, GlobalPosUtil.constructGlobalPos(this)),
                 PacketDistributor.PLAYER.with((ServerPlayer) player));
+
+        if (this.totalWeight > 0) {
+            this.harvestProbs.forEach(prob -> {
+                if (Math.random() * 100 < prob) {
+                    // 比较以下两种方法：
+//                    player.addItem(itemStack);
+//                    ItemHandlerHelper.giveItemToPlayer(player, itemStack);
+                    if (this.allIn) {
+                        this.weightedOutputs.stream().map(Pair::getFirst).toList()
+                                .forEach(itemStack -> ItemHandlerHelper.giveItemToPlayer(player, itemStack));
+                    } else {
+                        Optional.ofNullable(calOutput())
+                                .filter(itemStack -> itemStack != ItemStack.EMPTY)
+                                .ifPresent(itemStack -> ItemHandlerHelper.giveItemToPlayer(player, itemStack));
+                    }
+                }
+            });
+        }
     }
 
+    /**
+     * 按照权重随机选取收割产物中的一个并给予玩家
+     *
+     * @return 可能的产物。若无产物则返回 null
+     */
     private ItemStack calOutput() {
         int randomWeight = (new Random()).nextInt(this.totalWeight);
         int currentWeight = 0;
@@ -210,7 +236,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
 
     public void regenerate(LocalDate currentDate, List<? extends Player> players) {
         this.harvestedPlayers.clear();
-        this.regenerateDate = currentDate;
+        this.regenDate = currentDate;
         setChanged();
 //        System.out.println("regenerate!!!");
         players.forEach(player ->
