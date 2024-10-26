@@ -2,7 +2,6 @@ package com.github.wujichen158.ancientskybaubles.client.renderer;
 
 import com.github.wujichen158.ancientskybaubles.block.RegenerableBlock;
 import com.github.wujichen158.ancientskybaubles.block.entity.RegenerableBlockEntity;
-import com.github.wujichen158.ancientskybaubles.client.cache.RegenerableBlockEntityCache;
 import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusRequestPacket;
 import com.github.wujichen158.ancientskybaubles.register.AncientSkyBaublesBlocks;
@@ -38,24 +37,45 @@ public class RegenerableBlockEntityRenderer implements BlockEntityRenderer<Regen
 
     @Override
     public void render(RegenerableBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
-        if (RegenerableBlockEntityCache.hasHarvestStatus(blockEntity)) {
+//        if (RegenerableBlockEntityCache.hasHarvestStatus(blockEntity)) {
+//            // 命中
+//            Boolean res = RegenerableBlockEntityCache.queryHarvestStatus(blockEntity);
+//            if (res != null) {
+//                renderModel((res ? HARVESTED_STATE : UNHARVESTED_STATE), poseStack, bufferSource, combinedLight, combinedOverlay);
+//            }
+//        } else {
+//            if (blockEntity.isRemoved()) {
+//                return;
+//            }
+//
+//            // 未命中，发包给服务端查询
+//            GlobalPos globalPos = GlobalPosUtil.constructGlobalPos(blockEntity);
+//            AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusRequestPacket(
+//                            Minecraft.getInstance().player.getUUID(), globalPos),
+//                    Minecraft.getInstance().getConnection().getConnection());
+//            // 仅发一次即可。此处控制仅发一次
+//            RegenerableBlockEntityCache.addHarvestStatus(globalPos, null);
+//        }
+        if (blockEntity.harvestStatus != null) {
             // 命中
-            Boolean res = RegenerableBlockEntityCache.queryHarvestStatus(blockEntity);
-            if (res != null) {
-                renderModel((res ? HARVESTED_STATE : UNHARVESTED_STATE), poseStack, bufferSource, combinedLight, combinedOverlay);
-            }
+            renderModel((blockEntity.harvestStatus ? HARVESTED_STATE : UNHARVESTED_STATE), poseStack, bufferSource, combinedLight, combinedOverlay);
         } else {
-            if (blockEntity.isRemoved()) {
-                return;
-            }
+            // 似乎不需要
+//            if (blockEntity.isRemoved()) {
+//                return;
+//            }
+
+            // todo: 测试这种情况：当一个玩家离很远时，另一个离方块很近的玩家触发了再生，那么当远处的玩家回来时客户端缓存会不会刷新
 
             // 未命中，发包给服务端查询
-            GlobalPos globalPos = GlobalPosUtil.constructGlobalPos(blockEntity);
-            AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusRequestPacket(
-                            Minecraft.getInstance().player.getUUID(), globalPos),
-                    Minecraft.getInstance().getConnection().getConnection());
-            // 仅发一次即可。此处控制仅发一次
-            RegenerableBlockEntityCache.addHarvestStatus(globalPos, null);
+            if (!blockEntity.packetedFlag) {
+                blockEntity.packetedFlag = true;
+                GlobalPos globalPos = GlobalPosUtil.constructGlobalPos(blockEntity);
+                AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusRequestPacket(
+                                Minecraft.getInstance().player.getUUID(), globalPos),
+                        Minecraft.getInstance().getConnection().getConnection());
+            }
+//            RegenerableBlockEntityCache.addHarvestStatus(globalPos, null);
         }
     }
 

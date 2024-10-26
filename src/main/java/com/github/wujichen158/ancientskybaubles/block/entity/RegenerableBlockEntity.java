@@ -1,6 +1,5 @@
 package com.github.wujichen158.ancientskybaubles.block.entity;
 
-import com.github.wujichen158.ancientskybaubles.client.cache.RegenerableBlockEntityCache;
 import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusResponsePacket;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.RegeneratePacket;
@@ -33,6 +32,9 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
     // 客户端可见的BE状态，用于渲染
     @OnlyIn(Dist.CLIENT)
     public Boolean harvestStatus;
+
+    @OnlyIn(Dist.CLIENT)
+    public boolean packetedFlag;
 
     private LocalDate regenDate;
 
@@ -138,7 +140,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         super.setRemoved();
         // 方案1：直接客户端层面删除
         if (getLevel().isClientSide()) {
-            RegenerableBlockEntityCache.onBreak(this);
+//            RegenerableBlockEntityCache.onBreak(this);
         }
         // 方案2（备选）：每次删除时广播删除包
 //        if (getLevel().isClientSide()) {

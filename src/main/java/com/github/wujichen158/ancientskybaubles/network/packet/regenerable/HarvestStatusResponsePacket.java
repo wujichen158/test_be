@@ -1,7 +1,8 @@
 package com.github.wujichen158.ancientskybaubles.network.packet.regenerable;
 
-import com.github.wujichen158.ancientskybaubles.client.cache.RegenerableBlockEntityCache;
+import com.github.wujichen158.ancientskybaubles.block.entity.RegenerableBlockEntity;
 import com.github.wujichen158.ancientskybaubles.network.packet.Packet;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.event.network.CustomPayloadEvent;
@@ -33,7 +34,11 @@ public class HarvestStatusResponsePacket extends Packet {
 
     @Override
     public void handle(CustomPayloadEvent.Context ctx) {
-        ctx.enqueueWork(() -> RegenerableBlockEntityCache.addHarvestStatus(this.regenerableGlobalPos, this.harvestedStatus));
+        ctx.enqueueWork(() -> {
+            if (Minecraft.getInstance().level.getBlockEntity(this.regenerableGlobalPos.pos()) instanceof RegenerableBlockEntity blockEntity) {
+                blockEntity.harvestStatus = this.harvestedStatus;
+            }
+        });
         ctx.setPacketHandled(true);
     }
 }
