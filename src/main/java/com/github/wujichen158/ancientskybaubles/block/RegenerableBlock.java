@@ -2,22 +2,25 @@ package com.github.wujichen158.ancientskybaubles.block;
 
 import com.github.wujichen158.ancientskybaubles.block.entity.RegenerableBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 
 public abstract class RegenerableBlock extends BaseEntityBlock {
 
-    //    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final BooleanProperty HARVESTED = BooleanProperty.create("harvested");
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+//    public static final BooleanProperty HARVESTED = BooleanProperty.create("harvested");
 //    protected static final VoxelShape BASE_SHAPE = Block.box(0.0D, 0.0D, 0.0D,
 //            16.0D, 16.0D, 16.0D);
 
@@ -29,7 +32,8 @@ public abstract class RegenerableBlock extends BaseEntityBlock {
                 .noOcclusion()
                 .noLootTable()
                 .isValidSpawn((blockState, level, blockPos, entityType) -> false));
-        this.registerDefaultState(this.stateDefinition.any().setValue(HARVESTED, false));
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(FACING, Direction.NORTH));
     }
 
     // 处理方块被点击的交互逻辑
@@ -49,7 +53,7 @@ public abstract class RegenerableBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(HARVESTED);
+        builder.add(FACING);
     }
 
     @Override
@@ -62,10 +66,9 @@ public abstract class RegenerableBlock extends BaseEntityBlock {
 //    public VoxelShape getShape(BlockState state, BlockGetter blockGetter, BlockPos blockPos, CollisionContext context) {
 //        return BASE_SHAPE;
 //    }
-//
-//    @Nullable
-//    @Override
-//    public BlockState getStateForPlacement(BlockPlaceContext context) {
-//        return this.defaultBlockState().setValue(HARVESTED, false);
-//    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection());
+    }
 }

@@ -1,9 +1,6 @@
 {
   "variants": {
-    "harvested=true": {
-      "model": "ancientskybaubles:block/shoal_salt_mined"
-    },
-    "harvested=false": {
+    "": {
       "model": "ancientskybaubles:block/shoal_salt"
     }
   }

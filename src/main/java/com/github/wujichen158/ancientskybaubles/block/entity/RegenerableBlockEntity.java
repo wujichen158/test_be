@@ -152,6 +152,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
             // 如果当前时间在再生时间之后或相等，则触发再生
             if (!currentTime.isBefore(regenerateTime)) {
                 blockEntity.regenerate(currentDate, level.players());
+                // TODO: 替换为更可靠的日志
                 System.out.println("已重置！");
             }
         }
