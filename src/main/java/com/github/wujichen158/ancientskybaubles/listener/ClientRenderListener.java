@@ -40,7 +40,6 @@ public class ClientRenderListener {
 
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
-//        ShoalSaltBERenderer.registerAdditionalModels(event);
         RegenerableModels.registerAllModels(event);
     }
 

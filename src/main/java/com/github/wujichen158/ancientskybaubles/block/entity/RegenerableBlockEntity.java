@@ -4,7 +4,6 @@ import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusResponsePacket;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.RegeneratePacket;
 import com.github.wujichen158.ancientskybaubles.util.DayDateUtil;
-import com.github.wujichen158.ancientskybaubles.util.GlobalPosUtil;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
@@ -173,8 +172,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         setChanged();
 
 //        System.out.println("harvested!!!");
-        AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusResponsePacket(
-                        true, GlobalPosUtil.constructGlobalPos(this)),
+        AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusResponsePacket(true, this.getBlockPos()),
                 PacketDistributor.PLAYER.with((ServerPlayer) player));
 
         if (this.totalWeight > 0) {
@@ -219,8 +217,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         setChanged();
 //        System.out.println("regenerate!!!");
         players.forEach(player ->
-                AncientSkyBaublesNetwork.INSTANCE.send(new RegeneratePacket(
-                                false, GlobalPosUtil.constructGlobalPos(this)),
+                AncientSkyBaublesNetwork.INSTANCE.send(new RegeneratePacket(false, this.getBlockPos()),
                         PacketDistributor.PLAYER.with((ServerPlayer) player)));
     }
 

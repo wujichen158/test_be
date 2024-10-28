@@ -3,7 +3,6 @@ package com.github.wujichen158.ancientskybaubles.client.renderer;
 import com.github.wujichen158.ancientskybaubles.block.entity.RegenerableBlockEntity;
 import com.github.wujichen158.ancientskybaubles.network.AncientSkyBaublesNetwork;
 import com.github.wujichen158.ancientskybaubles.network.packet.regenerable.HarvestStatusRequestPacket;
-import com.github.wujichen158.ancientskybaubles.util.GlobalPosUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -11,7 +10,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,9 +36,8 @@ public class RegenerableBlockEntityRenderer implements BlockEntityRenderer<Regen
             // 未命中，发包给服务端查询
             if (!blockEntity.packetedFlag) {
                 blockEntity.packetedFlag = true;
-                GlobalPos globalPos = GlobalPosUtil.constructGlobalPos(blockEntity);
                 AncientSkyBaublesNetwork.INSTANCE.send(new HarvestStatusRequestPacket(
-                                Minecraft.getInstance().player.getUUID(), globalPos),
+                                Minecraft.getInstance().player.getUUID(), blockEntity.getBlockPos()),
                         Minecraft.getInstance().getConnection().getConnection());
             }
         }
