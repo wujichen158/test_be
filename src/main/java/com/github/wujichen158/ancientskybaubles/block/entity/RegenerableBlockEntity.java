@@ -130,29 +130,6 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
         this.regenMinute = tag.getByte("regenerate_minute");
     }
 
-//    @Nullable
-//    public SyncHarvestDataPacket getUpdatePacket(ServerPlayer player) {
-//        return new SyncHarvestDataPacket(hasHarvested(player), this.getBlockPos());
-//    }
-
-    @Override
-    public void setRemoved() {
-        super.setRemoved();
-        // 方案1：直接客户端层面删除
-        if (getLevel().isClientSide()) {
-//            RegenerableBlockEntityCache.onBreak(this);
-        }
-        // 方案2（备选）：每次删除时广播删除包
-//        if (getLevel().isClientSide()) {
-//            return;
-//        }
-//        getLevel().players().forEach(player -> {
-//            AncientSkyBaublesNetwork.INSTANCE.send(new GenerableOnBreakPacket(
-//                            RegenerableBlockEntityCache.constructGlobalPos(this)),
-//                    PacketDistributor.PLAYER.with((ServerPlayer) player));
-//        });
-    }
-
     /**
      * 方块实体tick时执行的方法
      *
@@ -211,7 +188,7 @@ public abstract class RegenerableBlockEntity extends BlockEntity {
                                 .forEach(itemStack -> ItemHandlerHelper.giveItemToPlayer(player, itemStack));
                     } else {
                         Optional.ofNullable(calOutput())
-                                .filter(itemStack -> itemStack != ItemStack.EMPTY)
+                                .filter(ItemStack::isEmpty)
                                 .ifPresent(itemStack -> ItemHandlerHelper.giveItemToPlayer(player, itemStack));
                     }
                 }
