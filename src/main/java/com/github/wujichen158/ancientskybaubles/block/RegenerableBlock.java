@@ -16,6 +16,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 public abstract class RegenerableBlock extends BaseEntityBlock {
 
+    //    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty HARVESTED = BooleanProperty.create("harvested");
 //    protected static final VoxelShape BASE_SHAPE = Block.box(0.0D, 0.0D, 0.0D,
 //            16.0D, 16.0D, 16.0D);
